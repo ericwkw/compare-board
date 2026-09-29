@@ -1,0 +1,15 @@
+{
+  "name": "compare-board",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A board for comparing options side by side: one screen per cell, Figma boards or your own pages, described in a config file.",
+  "type": "module",
+  "scripts": {
+    "check": "node lint-escapes.mjs",
+    "journeys": "node journeys.mjs",
+    "lint": "node lint-escapes.mjs",
+    "test": "npm run check && npm run journeys",
+    "start": "node serve.mjs"
+  },
+  "engines": { "node": ">=22" }
+}
