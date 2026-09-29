@@ -52,6 +52,11 @@ function scan(text) {
       const next = src[k + 1];
       if (SURVIVES.has(next)) { k++; continue; }
       if (BECOMES_A_CHARACTER.has(next)) { k++; continue; }   /* judged below, in context */
+      /* \uXXXX, \u{XXXX} and \xXX are real escapes: they survive as the
+         character they name, which is what was wanted. A malformed one is a
+         syntax error rather than a silent trap, so it is not ours to catch. */
+      if (next === 'u' && /^(\{[0-9a-fA-F]{1,6}\}|[0-9a-fA-F]{4})/.test(src.slice(k + 2))) { k++; continue; }
+      if (next === 'x' && /^[0-9a-fA-F]{2}/.test(src.slice(k + 2))) { k++; continue; }
       found.push({ line: lineAt[k] || line, why: `\\${next} is not an escape, so the backslash is dropped and the pattern matches "${next}"`,
                    snippet: src.slice(Math.max(0, k - 30), k + 30) });
       k++;
