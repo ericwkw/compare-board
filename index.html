@@ -88,6 +88,15 @@
   .nav button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   #rowNav{top:16px;left:50%;transform:translateX(-50%)}
   #colNav{top:16px;right:16px}
+  /* Long option names make the column nav reach across the middle, where the row
+     nav is, and a click meant for a row lands on a column. Shorten the column
+     labels rather than move the bar: a second line would cover the cell head,
+     where the link tabs are. */
+  #colNav .short{display:none}
+  #colNav.tight .full{display:none}
+  #colNav.tight .short{display:inline}
+  #rowNav.tight .lbl-text{display:none}
+  #rowNav.tight button::after{content:attr(data-n);font-variant-numeric:tabular-nums}
   #colNav button .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
   .brand{position:fixed;top:16px;left:16px;z-index:20;display:flex;align-items:center;gap:9px;
@@ -183,18 +192,26 @@
     var b = document.createElement('button');
     b.type = 'button';
     b.innerHTML = '<span class="lbl-text"></span>';
+    b.dataset.n = ('0' + (i + 1));
     b.querySelector('.lbl-text').textContent = ('0' + (i + 1)) + ' · ' + r.label;
     rowNav.appendChild(b);
   });
   cols.forEach(function(c){
     var b = document.createElement('button');
     b.type = 'button';
+    b.title = c.label;
     var dot = document.createElement('span');
     dot.className = 'dot';
     if(c.colour) dot.style.background = c.colour;
-    var t = document.createElement('span');
-    t.textContent = c.label;
-    b.appendChild(dot); b.appendChild(t);
+    var full = document.createElement('span');
+    full.className = 'full';
+    full.textContent = c.label;
+    /* what to show when there is no room for the whole name: the config's own
+       short form, or the first word of the label */
+    var short = document.createElement('span');
+    short.className = 'short';
+    short.textContent = c.short || c.label.split(/[\s\u00b7]+/)[0];
+    b.appendChild(dot); b.appendChild(full); b.appendChild(short);
     colNav.appendChild(b);
   });
 
@@ -229,6 +246,23 @@
       board.appendChild(cell);
     });
   });
+
+  /* Keep the two nav bars off each other. Measured rather than guessed at a
+     breakpoint, because how wide they are depends on how long the labels are. */
+  function overlapping(){
+    var rn = rowNav.getBoundingClientRect(), cn = colNav.getBoundingClientRect();
+    return rn.right > cn.left && cn.right > rn.left && rn.bottom > cn.top && cn.bottom > rn.top;
+  }
+  function fitNav(){
+    colNav.classList.remove('tight');
+    rowNav.classList.remove('tight');
+    if(!rowNav.querySelector('button') || !colNav.querySelector('button')) return;
+    if(!overlapping()) return;
+    colNav.classList.add('tight');       /* first give up the column names */
+    if(!overlapping()) return;
+    rowNav.classList.add('tight');       /* then the row names, leaving their numbers */
+  }
+  addEventListener('resize', fitNav);
 
   var rowBtns = [].slice.call(rowNav.querySelectorAll('button'));
   var colBtns = [].slice.call(colNav.querySelectorAll('button'));
@@ -275,6 +309,7 @@
     if(!hint.classList.contains('gone')) hint.classList.add('gone');
   }, { passive:true });
   sync();
+  fitNav();
 
   window.addEventListener('keydown', function(e){
     if(e.target.tagName === 'INPUT') return;            /* let someone type a link in peace */

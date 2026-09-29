@@ -390,6 +390,33 @@ await journey('a board can be dressed as its own project', async () => {
   assert(!wrong.length, 'the theme did not reach the page: ' + JSON.stringify(wrong));
 });
 
+/* 13 — the two nav bars must not sit on top of each other. Long option names
+   made the column nav reach across the middle of the screen, where the row nav
+   is, so clicking a row clicked a column instead. */
+await journey('the nav bars keep out of each other\'s way', async () => {
+  for (const width of [1500, 1200, 1000, 820]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+    await sleep(400);
+    const state = await evalJs(`(() => {
+      const rn = document.getElementById('rowNav').getBoundingClientRect();
+      const cn = document.getElementById('colNav').getBoundingClientRect();
+      const over = rn.right > cn.left && cn.right > rn.left && rn.bottom > cn.top && cn.bottom > rn.top;
+      const b = document.querySelectorAll('#rowNav button')[1].getBoundingClientRect();
+      const hit = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+      return { over, hitIsRowNav: !!(hit && hit.closest('#rowNav')) }; })()`);
+    assert(!state.over, `the nav bars overlap at ${width}px wide`);
+    assert(state.hitIsRowNav, `at ${width}px, clicking the second row hits something else`);
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1500, height: 950, deviceScaleFactor: 1, mobile: false });
+  await sleep(300);
+
+  /* and it really does move the board, not just avoid the overlap */
+  await click('#rowNav button', 1);
+  const landed = await settle(1, 0);
+  assert(Math.abs(landed.top - landed.h) < 5,
+    `clicking the second row landed at ${Math.round(landed.top)}, not ${landed.h}`);
+});
+
 const failed = results.filter(r => !r[1]);
 console.log('');
 results.forEach(([name, ok, why]) => console.log(`${ok ? ' ok ' : 'FAIL'}  ${name}${why ? ' — ' + why : ''}`));
