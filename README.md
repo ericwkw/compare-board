@@ -51,6 +51,19 @@ A cell holds either **Figma boards** (one or several, as numbered tabs) or **a
 page of your own** (`src`, embedded in place). A cell you leave out is an empty
 frame with a box to paste a link into.
 
+Three optional blocks let a board belong somewhere rather than float:
+
+```js
+brand: { label: 'EdCity · Compare', href: 'index.html', logo: '<svg…>' },
+theme: { paper: '#0E1116', sans: '"Archivo", system-ui, sans-serif' },
+pages: [{ label: 'Foundation', href: 'foundation.html' },
+        { label: 'Compare', href: 'present.html', here: true }],
+```
+
+`theme` sets custom properties before anything is drawn — `paper`, `card`, `ink`,
+`ink-2`, `ink-3`, `line`, `sans`, `mono` — so a board wears its project's colours
+and type without a second copy of `index.html`.
+
 ## The ideas worth knowing
 
 **The links travel with the page.** A link written in the config is in the file,

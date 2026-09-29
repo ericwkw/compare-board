@@ -93,6 +93,19 @@
   .brand{position:fixed;top:16px;left:16px;z-index:20;display:flex;align-items:center;gap:9px;
     font-weight:700;font-size:.9rem;text-decoration:none}
 
+  /* jump between sibling boards without going back to an index */
+  .pages{position:fixed;left:16px;bottom:16px;z-index:60;display:flex;gap:6px;padding:6px;border-radius:999px;
+    background:rgba(23,27,34,.86);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .pages a{
+    font-weight:600;font-size:.76rem;text-decoration:none;color:var(--ink-2);
+    padding:7px 13px;border-radius:999px;transition:background .15s,color .15s;
+  }
+  .pages a:hover{color:var(--ink)}
+  .pages a[aria-current="page"]{background:var(--ink);color:var(--paper)}
+  .pages a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  @media (max-width:640px){ .pages{bottom:auto;top:56px} }
+
   .hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:20;
     font-family:var(--mono);font-size:.7rem;color:var(--ink-3);background:rgba(23,27,34,.7);
     padding:6px 14px;border-radius:999px;border:1px solid var(--line);pointer-events:none;
@@ -109,6 +122,7 @@
 <body>
 
 <a class="brand" id="brand" href="#"></a>
+<nav class="pages" id="pages" aria-label="Boards"></nav>
 <div class="nav" id="rowNav" role="group" aria-label="Stage"></div>
 <div class="nav" id="colNav" role="group" aria-label="Option"></div>
 <p class="hint" id="hint"></p>
@@ -125,9 +139,35 @@
 
   /* ---------- build the page out of the config ---------- */
   if(CFG.title) document.title = CFG.title;
+
+  /* A theme is custom properties, set before anything is drawn, so a board can
+     look like the project it belongs to without a second copy of this file. */
+  if(CFG.theme) Object.keys(CFG.theme).forEach(function(k){
+    document.documentElement.style.setProperty('--' + k, CFG.theme[k]);
+  });
+
   var brand = document.getElementById('brand');
-  if(CFG.brand && CFG.brand.label){ brand.textContent = CFG.brand.label; brand.href = CFG.brand.href || '#'; }
+  if(CFG.brand && CFG.brand.label){
+    /* the logo is the project's own markup, so it is written as given rather
+       than escaped; a config file is code, and this one is yours */
+    if(CFG.brand.logo) brand.innerHTML = CFG.brand.logo;
+    brand.appendChild(document.createTextNode(CFG.brand.label));
+    brand.href = CFG.brand.href || '#';
+  }
   else brand.remove();
+
+  /* the boards either side of this one, if it belongs to a set */
+  var pages = document.getElementById('pages');
+  if(CFG.pages && CFG.pages.length){
+    CFG.pages.forEach(function(p){
+      var a = document.createElement('a');
+      a.textContent = p.label;
+      a.href = p.href || '#';
+      if(p.here) a.setAttribute('aria-current', 'page');
+      pages.appendChild(a);
+    });
+  }
+  else pages.remove();
   var hint = document.getElementById('hint');
   hint.textContent = CFG.hint || 'Scroll in any direction, or use the arrow keys';
 

@@ -354,6 +354,42 @@ await journey('the board says what it is and lets you leave any cell', async () 
     'the way out of a cell does not open safely in a new tab: ' + JSON.stringify(out));
 });
 
+/* 11 — a board can sit inside a set of pages, and say which one it is */
+await journey('the board links to its sibling pages and marks itself', async () => {
+  const has = await evalJs(`!!(window.BOARD.pages && window.BOARD.pages.length)`);
+  assert(has, 'the example config never shows a board that belongs to a set of pages');
+  const nav = await evalJs(`(() => {
+    const links = [...document.querySelectorAll('.pages a')];
+    return { count: links.length,
+             labels: links.map(a => a.textContent.trim()),
+             here: links.filter(a => a.getAttribute('aria-current') === 'page').map(a => a.textContent.trim()),
+             cfg: window.BOARD.pages.map(p => p.label) }; })()`);
+  assert(nav.count === nav.cfg.length, `${nav.count} page links for ${nav.cfg.length} in the config`);
+  assert(nav.cfg.every((l, i) => nav.labels[i] === l), 'the page links are not the config\'s: ' + nav.labels.join(','));
+  assert(nav.here.length === 1, 'the board does not mark which page you are on: ' + nav.here.join(','));
+});
+
+/* 12 — the board can wear someone's own mark and type */
+await journey('a board can be dressed as its own project', async () => {
+  const brand = await evalJs(`(() => { const b = document.querySelector('.brand');
+    return b ? { text: b.textContent.trim(), svg: !!b.querySelector('svg'), href: b.getAttribute('href') } : null; })()`);
+  const cfgBrand = await evalJs(`window.BOARD.brand || null`);
+  assert(cfgBrand, 'the example config has no brand to show');
+  assert(brand, 'the brand is missing from the page');
+  assert(brand.text.includes(cfgBrand.label), 'the brand does not say the config\'s label: ' + brand.text);
+  if (cfgBrand.logo) assert(brand.svg, 'the config gave a logo and the page did not draw it');
+
+  /* a theme block reaches the page as custom properties, so one board can look
+     like its project without a second copy of the tool */
+  const theme = await evalJs(`window.BOARD.theme || null`);
+  assert(theme && Object.keys(theme).length, 'the example config sets no theme');
+  const applied = await evalJs(`(() => { const cs = getComputedStyle(document.documentElement);
+    const want = window.BOARD.theme;
+    return Object.keys(want).map(k => [k, cs.getPropertyValue('--' + k).trim(), String(want[k]).trim()]); })()`);
+  const wrong = applied.filter(([, got, want]) => got !== want);
+  assert(!wrong.length, 'the theme did not reach the page: ' + JSON.stringify(wrong));
+});
+
 const failed = results.filter(r => !r[1]);
 console.log('');
 results.forEach(([name, ok, why]) => console.log(`${ok ? ' ok ' : 'FAIL'}  ${name}${why ? ' — ' + why : ''}`));
