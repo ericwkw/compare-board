@@ -417,6 +417,24 @@ await journey('the nav bars keep out of each other\'s way', async () => {
     `clicking the second row landed at ${Math.round(landed.top)}, not ${landed.h}`);
 });
 
+/* 14 — a shortened label still says which column it is */
+await journey('a shortened column label still names its column', async () => {
+  await send('Emulation.setDeviceMetricsOverride', { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
+  await sleep(500);
+  const shown = await evalJs(`(() => {
+    const cn = document.getElementById('colNav');
+    return { tight: cn.classList.contains('tight'),
+             shorts: [...cn.querySelectorAll('button .short')].map(s => s.textContent.trim()),
+             titles: [...cn.querySelectorAll('button')].map(b => b.title) }; })()`);
+  await send('Emulation.setDeviceMetricsOverride', { width: 1500, height: 950, deviceScaleFactor: 1, mobile: false });
+  await sleep(300);
+  assert(shown.tight, 'the column nav did not shorten at 900px, so this proves nothing');
+  const unique = new Set(shown.shorts);
+  assert(unique.size === shown.shorts.length,
+    'the shortened labels do not tell the columns apart: ' + shown.shorts.join(', '));
+  assert(shown.titles.every(t => t && t.length), 'a shortened button does not carry its full name');
+});
+
 const failed = results.filter(r => !r[1]);
 console.log('');
 results.forEach(([name, ok, why]) => console.log(`${ok ? ' ok ' : 'FAIL'}  ${name}${why ? ' — ' + why : ''}`));

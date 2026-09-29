@@ -206,11 +206,12 @@
     var full = document.createElement('span');
     full.className = 'full';
     full.textContent = c.label;
-    /* what to show when there is no room for the whole name: the config's own
-       short form, or the first word of the label */
+    /* What to show when there is no room for the whole name: the config's own
+       short form, or the part of the label before its separator — "Option B ·
+       Attentive Orientation" shortens to "Option B", not to "Option". */
     var short = document.createElement('span');
     short.className = 'short';
-    short.textContent = c.short || c.label.split(/[\s\u00b7]+/)[0];
+    short.textContent = c.short || c.label.split(/\s*[\u00b7\u2013\u2014:|]\s*/)[0].trim() || c.label;
     b.appendChild(dot); b.appendChild(full); b.appendChild(short);
     colNav.appendChild(b);
   });
@@ -262,7 +263,21 @@
     if(!overlapping()) return;
     rowNav.classList.add('tight');       /* then the row names, leaving their numbers */
   }
-  addEventListener('resize', fitNav);
+  /* Measure again whenever the bars change size for any reason. A web font
+     arriving is the one that matters: it lands after the first measurement and
+     makes every label wider, so a board that fitted at load stops fitting. */
+  var fitting = false, queued = 0;
+  function refit(){
+    if(fitting) return;
+    cancelAnimationFrame(queued);
+    queued = requestAnimationFrame(function(){ fitting = true; fitNav(); fitting = false; });
+  }
+  addEventListener('resize', refit);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(refit);
+    ro.observe(rowNav); ro.observe(colNav);
+  }
 
   var rowBtns = [].slice.call(rowNav.querySelectorAll('button'));
   var colBtns = [].slice.call(colNav.querySelectorAll('button'));
