@@ -57,6 +57,7 @@ window.BOARD = {
     { id: 'moodboard',  label: 'Moodboard' },
     { id: 'references', label: 'References' },
     { id: 'pages',      label: 'Layout' },
+    { id: 'notes',      label: 'Notes' },
   ],
 
   cells: {
@@ -75,5 +76,9 @@ window.BOARD = {
     'pages/a': { src: 'examples/page-a.html' },
     'pages/b': { src: 'examples/page-b.html' },
     'pages/c': { src: 'examples/page-c.html' },
+
+    'notes/a': { src: 'examples/page-a.html', badge: 'notes — A' },
+    'notes/b': { src: 'examples/page-b.html', badge: 'notes — B' },
+    'notes/c': { src: 'examples/page-c.html', badge: 'notes — C' },
   },
 };

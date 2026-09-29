@@ -97,6 +97,10 @@
   #colNav.tight .short{display:inline}
   #rowNav.tight .lbl-text{display:none}
   #rowNav.tight button::after{content:attr(data-n);font-variant-numeric:tabular-nums}
+  /* Last resort, when even the short names will not fit beside the row nav:
+     move the column nav down to the foot of the screen, where nothing is
+     clickable, rather than shrink it to something nobody can read. */
+  #colNav.dropped{top:auto;bottom:16px;right:16px}
   #colNav button .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
   .brand{position:fixed;top:16px;left:16px;z-index:20;display:flex;align-items:center;gap:9px;
@@ -255,13 +259,17 @@
     return rn.right > cn.left && cn.right > rn.left && rn.bottom > cn.top && cn.bottom > rn.top;
   }
   function fitNav(){
-    colNav.classList.remove('tight');
+    colNav.classList.remove('tight', 'dropped');
     rowNav.classList.remove('tight');
     if(!rowNav.querySelector('button') || !colNav.querySelector('button')) return;
     if(!overlapping()) return;
     colNav.classList.add('tight');       /* first give up the column names */
     if(!overlapping()) return;
     rowNav.classList.add('tight');       /* then the row names, leaving their numbers */
+    if(!overlapping()) return;
+    rowNav.classList.remove('tight');    /* the row names can come back down there */
+    colNav.classList.add('dropped');     /* and the column nav goes to the foot */
+    if(overlapping()) rowNav.classList.add('tight');
   }
   /* Measure again whenever the bars change size for any reason. A web font
      arriving is the one that matters: it lands after the first measurement and

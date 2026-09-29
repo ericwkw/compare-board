@@ -394,7 +394,22 @@ await journey('a board can be dressed as its own project', async () => {
    made the column nav reach across the middle of the screen, where the row nav
    is, so clicking a row clicked a column instead. */
 await journey('the nav bars keep out of each other\'s way', async () => {
-  for (const width of [1500, 1200, 1000, 820]) {
+  /* Stress the mechanism rather than this config's label lengths: give both bars
+     names as long as a real board's and make them re-measure. */
+  await evalJs(`(() => {
+    document.querySelectorAll('#rowNav button .lbl-text').forEach(function(t, i){
+      t.textContent = '0' + (i + 1) + ' \u00b7 ' + ['Moodboard','References','Palette','Layout'][i % 4];
+    });
+    document.querySelectorAll('#colNav button').forEach(function(b, i){
+      const letter = 'ABC'[i % 3];
+      b.querySelector('.full').textContent = 'Option ' + letter + ' \u00b7 ' +
+        ['Calm Momentum','Attentive Orientation','Expansive Intelligence'][i % 3];
+      b.querySelector('.short').textContent = 'Option ' + letter;
+    });
+    dispatchEvent(new Event('resize')); })()`);
+  await sleep(400);
+
+  for (const width of [1500, 1200, 1000, 820, 700, 600]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(400);
     const state = await evalJs(`(() => {

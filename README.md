@@ -125,6 +125,13 @@ the build on any backslash that will not survive.
 
 ## Deliberate choices
 
+**The nav bars get out of each other's way.** A column nav full of long names
+reaches across the middle of the screen, where the row nav sits, and a click
+meant for a row lands on a column. The column labels shorten first, then the row
+labels give way to their numbers, and if it still will not fit the column nav
+drops to the foot of the screen — measured, not guessed at a breakpoint, and
+measured again when a web font arrives and makes every label wider.
+
 **Cells are sized in percent, not `vw`/`vh`.** A viewport unit counts the
 scrollbar gutter that the scroll container's own width leaves out, so cells drift
 a scrollbar's width per column and the snap points stop matching what the nav
