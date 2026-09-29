@@ -300,10 +300,13 @@
     go.watch = setInterval(function(){
       var now = board.scrollLeft + board.scrollTop * 1e-3;
       var arrived = Math.abs(board.scrollLeft - left) <= 1 && Math.abs(board.scrollTop - top) <= 1;
-      if(arrived || ++tries > 12){ clearInterval(go.watch); return; }
+      /* say where we are as well as go there: a scroll event is the usual way
+         the nav finds out, and some browsers coalesce or drop them */
+      if(arrived || ++tries > 12){ clearInterval(go.watch); sync(); return; }
       if(now === last){                     /* it has settled, and not where we asked */
         board.scrollLeft = left; board.scrollTop = top;
         clearInterval(go.watch);
+        sync();
         return;
       }
       last = now;
